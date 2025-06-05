@@ -11,7 +11,7 @@ from sub_graph.sub_graph_states import SearchInputSchema, SearchSchema, OutputSc
 load_dotenv()
 
 
-class SearchAgent:
+class SearchSubGraph:
 
     def __init__(self):
         config = {
@@ -62,7 +62,7 @@ class SearchAgent:
 
 
 async def main():
-    agent = SearchAgent().construct_graph()
+    agent = SearchSubGraph().construct_graph()
     content = "Which country has issued new AI regulatory policies in the past month?"
     state = SearchInputSchema(question=content, tool_name="tavily")
     result = await agent.ainvoke(state)
