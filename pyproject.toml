@@ -1,0 +1,23 @@
+[project]
+name = "todolist"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.12",
+    "fastmcp>=2.5.2",
+    "langchain>=0.3.25",
+    "langchain-community>=0.3.24",
+    "langchain-core>=0.3.60",
+    "langchain-mcp-adapters>=0.1.4",
+    "langchain-openai>=0.3.17",
+    "langchain-tavily>=0.2.0",
+    "langgraph>=0.4.5",
+    "langsmith>=0.3.42",
+    "mcp>=1.9.2",
+    "requests>=2.32.3",
+    "streamlit>=1.45.1",
+    "trustcall>=0.0.39",
+    "uvicorn>=0.34.2",
+]
