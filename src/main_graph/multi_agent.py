@@ -15,7 +15,7 @@ from sub_graph.search_tools import SearchSubGraph
 from sub_graph.sub_graph_states import InputSchema
 from sub_graph.sub_graph_states import SearchInputSchema
 from config.llm_management import create_llm
-from main_graph.prompt import CLASSIFY_GENERAL_QUERY, RESPOND_MESSAGE, REWRITE_PROMPT
+from main_graph.prompt import RESPOND_MESSAGE, REWRITE_PROMPT
 from sub_graph.todolist_agent import ToDoListAgent
 
 
@@ -30,7 +30,7 @@ class MultiAgentGraph:
     async def judge_route_agent(self, state: InputState) -> dict[str, Any]:
         print(state)
         model = create_llm("zhipu")
-        # system_prompt = CLASSIFY_GENERAL_QUERY
+        # system_prompt = SYSTEM_ROMPT
         system_prompt = REWRITE_PROMPT  # 优化过的prompt，实现了分类和生成search计划
         messages = [SystemMessage(system_prompt)] + state.messages
         response = await model.ainvoke(messages)
@@ -107,7 +107,7 @@ class MultiAgentGraph:
 
     def route_to_execute(self, state: AgentState):
         ai_content = state.messages[-1].content
-        # print(ai_content)
+        print(ai_content)
         data = json.loads(ai_content)
 
         send_all = []
