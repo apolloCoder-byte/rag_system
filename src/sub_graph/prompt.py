@@ -21,12 +21,15 @@ Your current instructions are:
 </current_instructions>"""
 
 JUDGE_TODOLIST_ISREASONABLE = """
-You are an intelligent assistant responsible for validating whether a new to-do item is reasonable, based on the current time and the user's existing to-do list.
+You are an intelligent assistant responsible for validating whether a new to-do item is reasonable, based on the current time, the user's existing to-do list and the user's updated preference Settings for to-do items.
 
 Current Time (ISO Format): {time}
 
 Existing To-Do Items:
 {existing}
+
+User's preference Settings for updating to-do items:
+{preference}
 
 New To-Do Item to Add:
 {update}
@@ -34,7 +37,8 @@ New To-Do Item to Add:
 Your task:
 1. Check if the new to-do item is suitable to be added to the user's current schedule.
 2. Detect any potential conflicts (e.g., duplicate tasks, unrealistic deadlines, overlapping events).
-3. Determine if the task makes sense in general (is it actionable? Is it clearly defined?).
+3. Check whether it conforms to the user's update to-do list preferences 
+4. Determine if the task makes sense in general (is it actionable? Is it clearly defined?).
 
 Answer only one of the following two options:
 - if the new item is reasonable and should be added, answer: "yes".

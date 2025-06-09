@@ -108,8 +108,17 @@ class ToDoListAgent:
         memories = store.search(namespace)
         existing = "\n".join(f"{mem.value}" for mem in memories)
 
+        # get preference
+        namespace_prefer = ("instructions", user_id)
+        existing_memory = store.get(namespace_prefer, "user_instructions")
+        if existing_memory is not None:
+            instructions = existing_memory.value["memory"]
+        else:
+            instructions = None
+        # print(existing_memory)
+
         system_message = JUDGE_TODOLIST_ISREASONABLE.format(time=datetime.now().isoformat(), existing=existing,
-                                                            update=update_todolist)
+                                                            update=update_todolist, preference=instructions)
         input_message = [SystemMessage(content=system_message)]
         model = create_llm("deepseek")
         result = await model.ainvoke(input_message)

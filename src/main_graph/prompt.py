@@ -48,14 +48,10 @@ Step 2: Classify Each Sub-Message
 Assign one of the following functional attributes to each sub-message:
 
 - **search**: Requires retrieving external information (e.g., weather, news or the user needs you to introduce some content related to the topic)
-- **user_profile**: If the message **provides** personal information (e.g., "I live in Shanghai", "My job is a teacher")
-- **user_todo**: Refers to tasks or plans to be added to the to-do list.
+- **user_profile**: not **query** but **updating** personal information, such as name, location, etc.
+- **user_todo**: not **query** Refers to **adding** a new task or plan to the to-do list
 - **user_instructions**: Specifies preferences for managing the to-do list.
-- **general**: 
-    - **Ordinary greetings** (e.g., "Hello", "How are you?", "Hi there")
-    - **Ask for** the user's personal information, such as their name, address, interests, or hobbies
-    - **Ask for** the user's to-do list (e.g., what it contains or how many items it has)
-    - **Ask for** the user's performance for how to update ToDo list items. 
+- **general**: not **update** but  **greet** or **query** existing information (personal information such as personal profile, name, job, to-do items or settings, user's performance for how to update ToDo list items.)
 
 Note:
 All messages that are not user_profile, user_todo, user_instruction, or general should be classified as search. That is, in order to ensure the correctness of the reply, external data should be retrieved.
