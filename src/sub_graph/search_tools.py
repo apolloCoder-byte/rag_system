@@ -1,4 +1,5 @@
 import asyncio
+from anyio import Semaphore
 import json
 
 from dotenv import load_dotenv
@@ -13,22 +14,22 @@ load_dotenv()
 
 class SearchSubGraph:
 
-    def __init__(self):
-        config = {
+    def __init__(self, max_connections=5):
+        self.config = {
             "mcpServers": {
-                # A remote HTTP server
                 "web_search": {
                     "url": "http://localhost:8000/mcp",
-                    "transport": "streamable-http"
-                },
+                    "transport": "streamable-http",
+                }
             }
         }
-        self.client = Client(config)
+        self.semaphore = Semaphore(max_connections)  # 控制最大并发数
 
     async def use_tool(self, tool_name: str, params: dict):
-        async with self.client:
-            result = await self.client.call_tool(tool_name, params)
-            return result
+        async with self.semaphore:  # 限制并发数
+            async with Client(self.config) as client:  # 每个任务独立 Client
+                result = await client.call_tool(tool_name, params)
+                return result
 
     async def executor_search(self, state: SearchInputSchema):
         # get tool name
