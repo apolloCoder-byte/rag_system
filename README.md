@@ -17,21 +17,21 @@ the first step is to prepare your environment.
 pip install uv
 uv sync --frozen
 ```
-the second step is to prepare the api key of deepseek, zhipu, and tavily
+the second step is to prepare the api key of deepseek, zhipu, qwen, and tavily
 
 the third step is to run the mcp server
 ```bash
 python src/sub_graph/search_server.py
 ```
 
-the fourth step is to run the front-end page
-```bash
-streamlit run src/interactive_page.py
-```
-The fifth step is to run the back end
-
+the fourth step is to run the back end
 ```bash
 python src/main.py
+```
+The fifth step is to run the front-end page
+
+```bash
+streamlit run src/interactive_page.py
 ```
 
 ## note
