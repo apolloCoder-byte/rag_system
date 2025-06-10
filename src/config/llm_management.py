@@ -16,6 +16,11 @@ MODEL_CONFIG = {
         "base_url": "https://open.bigmodel.cn/api/paas/v4/",
         "api_key": os.getenv("ZHIPU_API_KEY"),
         "model": "GLM-4-Long"
+    },
+    "qwen": {
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": os.getenv("QWEN_API_KEY"),
+        "model": "qwen-plus"
     }
 }
 

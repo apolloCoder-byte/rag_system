@@ -29,7 +29,7 @@ class MultiAgentGraph:
 
     async def judge_route_agent(self, state: InputState) -> dict[str, Any]:
         print(state)
-        model = create_llm("zhipu")
+        model = create_llm("qwen")
         # system_prompt = SYSTEM_ROMPT
         system_prompt = REWRITE_PROMPT  # 优化过的prompt，实现了分类和生成search计划
         messages = [SystemMessage(system_prompt)] + state.messages
@@ -92,7 +92,7 @@ class MultiAgentGraph:
         )
 
         # llm
-        model = create_llm("zhipu")
+        model = create_llm("qwen")
         # 如果是智普，这里是HumanMessage，如果是deepseek，这里可以是SystemMessage
         response = await model.ainvoke([HumanMessage(system_message)])
         # print(response)
