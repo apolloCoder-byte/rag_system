@@ -16,6 +16,7 @@ dependencies = [
     "langgraph>=0.4.5",
     "langsmith>=0.3.42",
     "mcp>=1.9.2",
+    "pydantic>=2.11.4",
     "requests>=2.32.3",
     "streamlit>=1.45.1",
     "trustcall>=0.0.39",
