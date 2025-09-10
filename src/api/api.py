@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from api.auth import router as auth_router
-from api.chatbot import router as chatbot_router
+from src.api.auth import router as auth_router
+from src.api.chatbot import router as chatbot_router
 from loguru import logger
 
 api_router = APIRouter()

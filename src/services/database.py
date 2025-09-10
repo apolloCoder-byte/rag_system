@@ -15,13 +15,13 @@ from sqlmodel import (
     select,
 )
 
-from config.setting import (
+from src.config.setting import (
     Environment,
     settings,
 )
 from loguru import logger
-from schema.session import Session as ChatSession
-from schema.user import User
+from src.schema.session import Session as ChatSession
+from src.schema.user import User
 
 
 class DatabaseService:

@@ -13,10 +13,10 @@ from jose import (
     jwt,
 )
 
-from config.setting import settings
+from src.config.setting import settings
 from loguru import logger
-from schema.auth import Token
-from utils.sanitization import sanitize_string
+from src.schema.auth import Token
+from src.utils.sanitization import sanitize_string
 
 
 def create_access_token(thread_id: str, expires_delta: Optional[timedelta] = None) -> Token:

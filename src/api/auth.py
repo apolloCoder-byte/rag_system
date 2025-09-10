@@ -22,21 +22,21 @@ from fastapi.security import (
 # from core.config import settings
 # from core.limiter import limiter
 from loguru import logger
-from schema.session import Session
-from schema.user import User
-from schema.auth import (
+from src.schema.session import Session
+from src.schema.user import User
+from src.schema.auth import (
     SessionResponse,
     TokenResponse,
     UserCreate,
     UserResponse,
     UserLogin,
 )
-from services.database import DatabaseService
-from utils.auth import (
+from src.services.database import DatabaseService
+from src.utils.auth import (
     create_access_token,
     verify_token,
 )
-from utils.sanitization import (
+from src.utils.sanitization import (
     sanitize_email,
     sanitize_string,
     validate_password_strength,

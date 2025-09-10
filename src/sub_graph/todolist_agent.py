@@ -8,9 +8,9 @@ from langgraph.store.base import BaseStore
 from langchain_core.messages import HumanMessage, SystemMessage
 from trustcall import create_extractor
 
-from config.llm_management import create_llm
-from sub_graph.sub_graph_states import ToDOListSchema, InputSchema, Profile, ToDo
-from sub_graph.prompt import TRUSTCALL_INSTRUCTION, CREATE_INSTRUCTIONS, JUDGE_TODOLIST_ISREASONABLE
+from src.config.llm_management import create_llm
+from src.sub_graph.sub_graph_states import ToDOListSchema, InputSchema, Profile, ToDo
+from src.sub_graph.prompt import TRUSTCALL_INSTRUCTION, CREATE_INSTRUCTIONS, JUDGE_TODOLIST_ISREASONABLE
 
 
 class ToDoListAgent:
@@ -171,7 +171,7 @@ class ToDoListAgent:
 
 async def main():
     import time
-    from main_graph.main_graph_states import Router
+    from src.main_graph.main_graph_states import Router
     from langgraph.store.memory import InMemoryStore
     from langgraph.checkpoint.memory import MemorySaver
 

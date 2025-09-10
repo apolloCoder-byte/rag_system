@@ -10,13 +10,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
 from langgraph.store.base import BaseStore
 
-from main_graph.main_graph_states import InputState, AgentState, Router, GeneralState, OutputState
-from sub_graph.search_tools import SearchSubGraph
-from sub_graph.sub_graph_states import InputSchema
-from sub_graph.sub_graph_states import SearchInputSchema
-from config.llm_management import create_llm
-from main_graph.prompt import RESPOND_MESSAGE, REWRITE_PROMPT
-from sub_graph.todolist_agent import ToDoListAgent
+from src.main_graph.main_graph_states import InputState, AgentState, Router, GeneralState, OutputState
+from src.sub_graph.search_tools import SearchSubGraph
+from src.sub_graph.sub_graph_states import InputSchema
+from src.sub_graph.sub_graph_states import SearchInputSchema
+from src.config.llm_management import create_llm
+from src.main_graph.prompt import RESPOND_MESSAGE, REWRITE_PROMPT
+from src.sub_graph.todolist_agent import ToDoListAgent
 
 
 class MultiAgentGraph:

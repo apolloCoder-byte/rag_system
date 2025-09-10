@@ -1,7 +1,7 @@
 from langgraph.store.memory import InMemoryStore
 from langgraph.checkpoint.memory import MemorySaver
 
-from main_graph.multi_agent import MultiAgentGraph
+from src.main_graph.multi_agent import MultiAgentGraph
 
 import json
 import os

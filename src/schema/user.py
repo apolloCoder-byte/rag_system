@@ -11,10 +11,10 @@ from sqlmodel import (
     Relationship,
 )
 
-from schema.base import BaseModel
+from src.schema.base import BaseModel
 
 if TYPE_CHECKING:
-    from schema.session import Session
+    from src.schema.session import Session
 
 
 class User(BaseModel, table=True):

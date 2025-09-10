@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from main_graph.main_graph_states import Router
+from src.main_graph.main_graph_states import Router
 
 
 class Profile(BaseModel):

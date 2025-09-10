@@ -5,9 +5,9 @@ from sqlmodel import (
     Relationship,
 )
 
-from schema.base import BaseModel
+from src.schema.base import BaseModel
 
-from schema.user import User
+from src.schema.user import User
 
 
 class Session(BaseModel, table=True):

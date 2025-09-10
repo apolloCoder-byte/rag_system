@@ -65,13 +65,13 @@ from fastapi.responses import JSONResponse
 # from slowapi import _rate_limit_exceeded_handler
 # from slowapi.errors import RateLimitExceeded
 
-from api.api import api_router
-from config.setting import settings
+from src.api.api import api_router
+from src.config.setting import settings
 # from core.limiter import limiter
 from loguru import logger
 # from core.metrics import setup_metrics
 # from core.middleware import MetricsMiddleware
-from services.database import database_service
+from src.services.database import database_service
 
 # Load environment variables
 load_dotenv()

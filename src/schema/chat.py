@@ -55,14 +55,12 @@ class ChatRequest(BaseModel):
     """Request model for chat endpoint.
 
     Attributes:
-        messages: List of messages in the conversation.
+        messages: The messages of the conversation.
+        conversation_id: The ID of the conversation.
     """
 
-    messages: List[Message] = Field(
-        ...,
-        description="List of messages in the conversation",
-        min_length=1,
-    )
+    message: str = Field(..., description="The message of the conversation")
+    conversation_id: str = Field(..., description="The ID of the conversation")
 
 
 class ChatResponse(BaseModel):
