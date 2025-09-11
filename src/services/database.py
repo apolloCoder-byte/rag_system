@@ -22,6 +22,7 @@ from src.config.setting import (
 from loguru import logger
 from src.schema.session import Session as ChatSession
 from src.schema.user import User
+from src.schema.history import History
 
 
 class DatabaseService:

@@ -15,6 +15,8 @@ from langchain_core.messages import HumanMessage, AIMessageChunk, AIMessage
 from src.api.auth import get_current_session, get_current_user
 from src.config.setting import settings
 from src.graph.builder import build_graph_with_memory
+from src.utils.conversation_manager import conversation_manager
+from src.schema.redis import MessageRole
 from loguru import logger
 from src.schema.session import Session
 from src.schema.chat import (
@@ -33,12 +35,14 @@ graph = build_graph_with_memory()
 async def astream_workflow_generator(
     message: str,
     thread_id: str,
+    user_id: int,
 ) -> AsyncGenerator[str, None]:
     """异步流式工作流生成器
     
     Args:
         message: 用户消息
         thread_id: 线程ID
+        user_id: 用户ID
     
     Yields:
         str: Server-Sent Events 格式的数据
@@ -71,8 +75,16 @@ async def astream_workflow_generator(
                 yield f"data: {message_obj.content}\n\n"
                 await asyncio.sleep(0.01)
             
-            if isinstance(message_obj, AIMessage):
-                continue
+            if isinstance(message_obj, AIMessage) and not isinstance(message_obj, AIMessageChunk):
+                conversation_manager.add_message(
+                    session_id=thread_id,
+                    user_id=user_id,
+                    message_role=MessageRole.ASSISTANT,
+                    message=message_obj.content
+                )
+        
+        
+        
         # 发送完成信号
         final_data = {"content": "", "done": True}
         yield f"data: {json.dumps(final_data, ensure_ascii=False)}\n\n"
@@ -100,10 +112,20 @@ async def chat_stream(
     """
     conversation_id = chat_request.conversation_id
     logger.info(f"conversation_id: {conversation_id}")
+
+    # 1. 立即存储用户消息到多轮对话管理器
+    conversation_manager.add_message(
+        session_id=conversation_id,
+        user_id=user.id,
+        message_role=MessageRole.USER,
+        message=chat_request.message
+    )
+
     return StreamingResponse(
         astream_workflow_generator(
             chat_request.message, 
-            conversation_id
+            conversation_id,
+            user.id
             ),
         media_type="text/event-stream")
 
@@ -125,6 +147,14 @@ async def chat(
     """
     try:
         logger.info(f"Chat request received from user {user.id}, conversation_id: {chat_request.conversation_id}")
+        
+        # 1. 立即存储用户消息到多轮对话管理器
+        conversation_manager.add_message(
+            session_id=chat_request.conversation_id,
+            user_id=user.id,
+            message_role=MessageRole.USER,
+            message=chat_request.message
+        )
         
         # 构建输入状态
         input_state = {
@@ -150,6 +180,15 @@ async def chat(
             last_message = result["messages"][-1]
             response_content = last_message.content if hasattr(last_message, 'content') else str(last_message)
         
+        # 2. 存储AI回复到多轮对话管理器
+        if response_content.strip():
+            conversation_manager.add_message(
+                session_id=chat_request.conversation_id,
+                user_id=user.id,
+                message_role=MessageRole.ASSISTANT,
+                message=response_content
+            )
+        
         logger.info(f"Chat response generated: {response_content[:100]}...")
         
         return {"message": response_content}
@@ -158,7 +197,7 @@ async def chat(
         logger.error(f"Error in chat endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@router.get("/chat/history/{conversation_id}")
+@router.get("/get_history/{conversation_id}")
 async def get_chat_history(
     conversation_id: str,
     user: User = Depends(get_current_user),
@@ -175,34 +214,53 @@ async def get_chat_history(
     try:
         logger.info(f"Getting chat history for conversation {conversation_id}")
         
-        # 配置参数
-        config = {
-            "configurable": {
-                "thread_id": conversation_id,
-                "user_id": str(user.id)
-            }
-        }
+        # 从多轮对话管理器获取消息
+        messages = conversation_manager.get_messages(
+            session_id=conversation_id,
+            user_id=user.id,
+            limit=50
+        )
         
-        # 获取当前状态
-        current_state = await graph.aget_state(config)
+        # 如果Redis中没有数据，尝试从PostgreSQL获取
+        if not messages:
+            logger.info("No messages found in Redis, trying PostgreSQL")
+            history_messages = conversation_manager.get_messages_from_postgres(
+                session_id=conversation_id,
+                limit=50
+            )
+            
+            # 转换PostgreSQL消息格式
+            messages = []
+            for history in history_messages:
+                messages.append({
+                    "session_id": history.session_id,
+                    "user_id": history.user_id,
+                    "message_role": history.message_role,
+                    "message": history.message,
+                    "created_at": history.created_at.isoformat()
+                })
         
-        if not current_state or not current_state.values.get("messages"):
-            return ChatResponse(messages=[])
+        # 转换为前端需要的格式
+        chat_messages = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                # 从PostgreSQL获取的数据
+                role = msg["message_role"]
+                content = msg["message"]
+            else:
+                # 从Redis获取的数据
+                role = msg.message_role
+                content = msg.message
+            
+            chat_messages.append(Message(role=role, content=content))
         
-        # 转换消息格式
-        messages = []
-        for msg in current_state.values["messages"]:
-            if hasattr(msg, 'content') and hasattr(msg, 'type'):
-                role = "assistant" if msg.type == "ai" else "user"
-                messages.append(Message(role=role, content=msg.content))
-        
-        return ChatResponse(messages=messages)
+        return ChatResponse(messages=chat_messages)
         
     except Exception as e:
         logger.error(f"Error getting chat history: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get chat history: {str(e)}")
 
-@router.delete("/chat/history/{conversation_id}")
+@router.delete("/clear_history/{conversation_id}")
 async def clear_chat_history(
     conversation_id: str,
     user: User = Depends(get_current_user),
@@ -219,18 +277,16 @@ async def clear_chat_history(
     try:
         logger.info(f"Clearing chat history for conversation {conversation_id}")
         
-        # 配置参数
-        config = {
-            "configurable": {
-                "thread_id": conversation_id,
-                "user_id": str(user.id)
-            }
-        }
+        # 使用多轮对话管理器清空会话
+        success = conversation_manager.clear_session(
+            session_id=conversation_id,
+            user_id=user.id
+        )
         
-        # 更新状态，清空消息
-        await graph.aupdate_state(config, {"messages": []})
-        
-        return {"message": "Chat history cleared successfully"}
+        if success:
+            return {"message": "Chat history cleared successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to clear chat history")
         
     except Exception as e:
         logger.error(f"Error clearing chat history: {e}", exc_info=True)

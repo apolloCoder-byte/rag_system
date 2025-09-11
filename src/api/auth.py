@@ -212,7 +212,15 @@ async def login(
             )
 
         user = await db_service.get_user_by_email(username)
-        if not user or not user.verify_password(password):
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if not user.verify_password(password):
             raise HTTPException(
                 status_code=401,
                 detail="Incorrect email or password",
