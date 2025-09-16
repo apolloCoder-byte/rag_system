@@ -11,10 +11,10 @@ class RedisConfig:
     """Redis 配置类"""
     
     def __init__(self):
-        self.host = getattr(settings, 'REDIS_HOST', 'localhost')
-        self.port = getattr(settings, 'REDIS_PORT', 6379)
-        self.password = getattr(settings, 'REDIS_PASSWORD', 123456)
-        self.db = getattr(settings, 'REDIS_DB', 1)
+        self.host = settings.REDIS_HOST
+        self.port = settings.REDIS_PORT
+        self.password = settings.REDIS_PASSWORD
+        self.db = settings.REDIS_DB
         self.decode_responses = True
         self.socket_connect_timeout = 5
         self.socket_timeout = 5

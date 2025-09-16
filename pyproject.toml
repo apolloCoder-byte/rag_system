@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "bcrypt>=4.3.0",
+    "dashscope>=1.24.4",
     "fastapi>=0.115.12",
     "fastmcp>=2.5.2",
     "langchain>=0.3.25",
@@ -21,6 +22,7 @@ dependencies = [
     "mcp>=1.9.2",
     "psycopg2>=2.9.10",
     "pydantic[email]>=2.11.4",
+    "pymilvus>=2.6.1",
     "python-jose>=3.5.0",
     "redis>=6.4.0",
     "requests>=2.32.3",

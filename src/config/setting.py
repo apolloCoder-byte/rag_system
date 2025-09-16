@@ -186,10 +186,19 @@ class Settings:
 
         # Redis 配置
         self.REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
-        self.REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
-        self.REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD", 123456)
-        self.REDIS_DB: int = int(os.getenv("REDIS_DB", "1"))
-    
+        self.REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+        self.REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD", "123456")
+        self.REDIS_DB: int = int(os.getenv("REDIS_DB", 1))
+
+        # milvus 配置
+        self.MILVUS_HOST: str = os.getenv("MILVUS_HOST", "localhost")
+        self.MILVUS_PORT: int = os.getenv("MILVUS_PORT", 19530)
+        self.MILVUS_DATABASE: str = os.getenv("MILVUS_DATABASE", "default")
+
+        # embedding model 配置
+        self.EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
+        self.EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY")
+
         # Rate Limiting Configuration
         self.RATE_LIMIT_DEFAULT = parse_list_from_env("RATE_LIMIT_DEFAULT", ["200 per day", "50 per hour"])
 

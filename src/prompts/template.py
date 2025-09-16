@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from langchain_core.messages import SystemMessage
 from langgraph.prebuilt.chat_agent_executor import AgentState
 
 def load_prompt_from_file(prompt_name: str) -> str:
@@ -40,7 +41,7 @@ def load_prompt_from_file(prompt_name: str) -> str:
 
 
 def apply_prompt_template(
-    prompt_name: str, state: AgentState
+    prompt_name: str, state: AgentState, **kwargs
 ) -> list:
     """
     应用模板变量到 prompt 模板并返回格式化的消息。
@@ -56,12 +57,15 @@ def apply_prompt_template(
     current_time = datetime.now().strftime("%a %b %d %Y %H:%M:%S %z")
     locale = state.get("locale", "zh-CN")
 
+    params = {**kwargs}
+
     system_prompt = template.format(
         CURRENT_TIME=current_time,
-        locale=locale
+        locale=locale,
+        **params
     )
 
-    return [{"role": "system", "content": system_prompt}] + state["messages"]
+    return [SystemMessage(content=system_prompt)]
 
 if __name__ == "__main__":
     print(load_prompt_from_file("chat"))

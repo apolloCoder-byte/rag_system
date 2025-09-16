@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import List, AsyncGenerator
+from typing import AsyncGenerator
 
 from fastapi import (
     APIRouter,
@@ -12,25 +12,21 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage, AIMessageChunk, AIMessage
-from src.api.auth import get_current_session, get_current_user
-from src.config.setting import settings
-from src.graph.builder import build_graph_with_memory
+from src.api.auth import get_current_user
+from src.graph.builder import build_agentic_rag_graph
 from src.utils.conversation_manager import conversation_manager
 from src.schema.redis import MessageRole
 from loguru import logger
-from src.schema.session import Session
 from src.schema.chat import (
     ChatRequest,
     ChatResponse,
     Message,
-    StreamResponse,
 )
 from src.schema.user import User
 
 router = APIRouter()
 
-# 全局 graph 实例，只创建一次
-graph = build_graph_with_memory()
+graph = build_agentic_rag_graph()
 
 async def astream_workflow_generator(
     message: str,
@@ -60,6 +56,7 @@ async def astream_workflow_generator(
         config = {
             "configurable": {
                 "thread_id": thread_id,
+                "user_id": str(user_id)
             }
         }
         
@@ -68,22 +65,23 @@ async def astream_workflow_generator(
             # print(chunk)
             # print("\n")
             message_obj, _ = chunk
-            if isinstance(message_obj, AIMessageChunk) and message_obj.content.strip() == "":
-                continue
 
-            if isinstance(message_obj, AIMessageChunk) and message_obj.content:
+            if (
+                isinstance(message_obj, AIMessageChunk)
+                and message_obj.content
+                and isinstance(message_obj.content, str)
+            ):
                 yield f"data: {message_obj.content}\n\n"
                 await asyncio.sleep(0.01)
             
-            if isinstance(message_obj, AIMessage) and not isinstance(message_obj, AIMessageChunk):
-                conversation_manager.add_message(
-                    session_id=thread_id,
-                    user_id=user_id,
-                    message_role=MessageRole.ASSISTANT,
-                    message=message_obj.content
-                )
-        
-        
+            # if isinstance(message_obj, AIMessage) and not isinstance(message_obj, AIMessageChunk):
+            #     # conversation_manager.add_message(
+            #     #     session_id=thread_id,
+            #     #     user_id=user_id,
+            #     #     message_role=MessageRole.ASSISTANT,
+            #     #     message=message_obj.content
+            #     # )
+            #     print(message_obj.content)
         
         # 发送完成信号
         final_data = {"content": "", "done": True}
@@ -113,7 +111,14 @@ async def chat_stream(
     conversation_id = chat_request.conversation_id
     logger.info(f"conversation_id: {conversation_id}")
 
-    # 1. 立即存储用户消息到多轮对话管理器
+    # 1. 预热会话数据（如果 Redis 中没有数据）
+    conversation_manager.warmup_session_from_postgres(
+        session_id=conversation_id,
+        user_id=user.id,
+        limit=50
+    )
+
+    # 2. 立即存储用户消息到多轮对话管理器
     conversation_manager.add_message(
         session_id=conversation_id,
         user_id=user.id,
@@ -148,7 +153,14 @@ async def chat(
     try:
         logger.info(f"Chat request received from user {user.id}, conversation_id: {chat_request.conversation_id}")
         
-        # 1. 立即存储用户消息到多轮对话管理器
+        # 1. 预热会话数据（如果 Redis 中没有数据）
+        conversation_manager.warmup_session_from_postgres(
+            session_id=chat_request.conversation_id,
+            user_id=user.id,
+            limit=50
+        )
+        
+        # 2. 立即存储用户消息到多轮对话管理器
         conversation_manager.add_message(
             session_id=chat_request.conversation_id,
             user_id=user.id,
@@ -180,7 +192,7 @@ async def chat(
             last_message = result["messages"][-1]
             response_content = last_message.content if hasattr(last_message, 'content') else str(last_message)
         
-        # 2. 存储AI回复到多轮对话管理器
+        # 3. 存储AI回复到多轮对话管理器
         if response_content.strip():
             conversation_manager.add_message(
                 session_id=chat_request.conversation_id,
@@ -191,10 +203,10 @@ async def chat(
         
         logger.info(f"Chat response generated: {response_content[:100]}...")
         
-        return {"message": response_content}
+        return {"response": response_content}
         
     except Exception as e:
-        logger.error(f"Error in chat endpoint: {e}", exc_info=True)
+        logger.error(f"Error in chat endpoint:{e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.get("/get_history/{conversation_id}")
@@ -214,14 +226,14 @@ async def get_chat_history(
     try:
         logger.info(f"Getting chat history for conversation {conversation_id}")
         
-        # 从多轮对话管理器获取消息
+        # 直接从 Redis 获取消息（因为发送消息时已经预热了）
         messages = conversation_manager.get_messages(
             session_id=conversation_id,
             user_id=user.id,
             limit=50
         )
         
-        # 如果Redis中没有数据，尝试从PostgreSQL获取
+        # 如果 Redis 中仍然没有数据，尝试从 PostgreSQL 获取（备用方案）
         if not messages:
             logger.info("No messages found in Redis, trying PostgreSQL")
             history_messages = conversation_manager.get_messages_from_postgres(

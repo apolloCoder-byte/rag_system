@@ -208,6 +208,44 @@ class ConversationManager:
             logger.error(f"Failed to get messages from PostgreSQL: {e}")
             return []
     
+    def warmup_session_from_postgres(
+        self, 
+        session_id: str, 
+        user_id: int, 
+        limit: int = 50
+    ) -> bool:
+        """从 PostgreSQL 预热会话数据到 Redis"""
+        try:
+            # 检查 Redis 中是否已有数据
+            session_messages_key = RedisKeyBuilder.session_messages_key(user_id, session_id)
+            if self.redis_client.exists(session_messages_key):
+                logger.info(f"Session {session_id} already exists in Redis, skipping warmup")
+                return True
+            
+            # 从 PostgreSQL 获取历史数据
+            history_messages = self.get_messages_from_postgres(session_id, limit)
+            
+            if not history_messages:
+                logger.info(f"No history data found for session {session_id}")
+                return True
+            
+            # 将历史数据存储到 Redis
+            for history in history_messages:
+                self._store_to_redis(
+                    session_id=history.session_id,
+                    user_id=history.user_id,
+                    message_role=history.message_role,
+                    message=history.message,
+                    created_at=history.created_at
+                )
+            
+            logger.info(f"Warmed up {len(history_messages)} messages for session {session_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to warm up session {session_id}: {e}")
+            return False
+    
     def clear_session(self, session_id: str, user_id: int) -> bool:
         """清空会话消息"""
         try:

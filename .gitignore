@@ -13,3 +13,6 @@ wheels/
 .env.*
 
 .idea/
+
+# a ppt file
+agentic_rag_workflow.pptx
