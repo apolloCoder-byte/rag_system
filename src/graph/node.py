@@ -58,31 +58,18 @@ async def query_node(state: State, config: RunnableConfig) -> Command[Literal["r
     )
     logger.info(f"Found {len(history_messages)} history messages in Redis")
 
-    num = len(state["messages"])
-    if num == 1:
-        logger.info("no history messages in state")
-        try:
-            historical_messages = []
-            # 将历史消息转换为LangChain消息格式
-            for msg in history_messages:
-                if msg.message_role == MessageRole.USER:
-                    historical_messages.append(HumanMessage(content=msg.message))
-                elif msg.message_role == MessageRole.ASSISTANT:
-                    historical_messages.append(AIMessage(content=msg.message))
-            
-            logger.info(f"deal with history messages to langchain messages")
-            
-            update_dict["messages"] = "delete"
-            update_dict["history_messages"] = historical_messages
-            
-        except Exception as e:
-            logger.error(f"Failed to load conversation history: {e}")
-    else:
-        logger.info("history messages have been loaded state['messages']")
+    # convert redis message to langchain message
+    historical_messages = []
+    for msg in history_messages:
+        if msg.message_role == MessageRole.USER:
+            historical_messages.append(HumanMessage(content=msg.message))
+        elif msg.message_role == MessageRole.ASSISTANT:
+            historical_messages.append(AIMessage(content=msg.message))
+    logger.info(f"deal with history messages to langchain messages")
+    update_dict["messages"] = "delete"
+    update_dict["history_messages"] = historical_messages
 
     return Command(
-        # 如果有历史消息且没有被加载进state中，则更新三个字段(user_query, history_messages, messages被清空)
-        # 如果没有历史消息或者有历史消息且已经被加载进state中，则更新一个字段(user_query)
         update=update_dict,
         goto="route"
     )
@@ -144,10 +131,19 @@ async def get_memory_node(state: State, config: RunnableConfig) -> Command[Liter
     """从记忆中获取相关信息"""
     logger.info("Get memory node retrieving relevant information")
     
-    user_query = state["user_query"]
     memory_threshold = state["memory_threshold"]
 
-    query_vector = get_text_embeddings(user_query)
+    prepare_params = {"user_query": state.get("user_query")}
+
+    system_msg = apply_prompt_template("get_memory", state, **prepare_params)
+    msg = system_msg + state["messages"]
+    llm = get_llm_by_type(AGENT_LLM_MAP.get("route", "basic"))
+    response = await llm.ainvoke(msg)
+    rewrite_question = response.content
+    update_dict = {"rewrite_query": rewrite_question}
+    logger.info(f"LLM将用户输入的问题进行重写以进行记忆搜索：{rewrite_question}")
+
+    query_vector = get_text_embeddings(rewrite_question)
     memory = await milvus_service.search_data_by_single_vector(
         "memory", query_vector, "question_embedding", ["question", "answer"], 3
     )
@@ -158,9 +154,11 @@ async def get_memory_node(state: State, config: RunnableConfig) -> Command[Liter
         distance = item.get("distance", 0)
         if distance >= memory_threshold:
             memory_info.append(item.get("fields"))
+    
+    update_dict["memory_info"] = memory_info
 
     return Command(
-        update={"memory_info": memory_info},
+        update=update_dict,
         goto="supervisor"
     )
 
@@ -296,7 +294,7 @@ async def update_memory_node(state: State, config: RunnableConfig) -> Command[Li
 
     if needs_retrieval:
         logger.info("使用了知识库进行检索，判断是否需要更新记忆")
-    
+
         llm = get_llm_by_type(AGENT_LLM_MAP.get("route", "basic"))
 
         prepare_params = {
@@ -307,19 +305,20 @@ async def update_memory_node(state: State, config: RunnableConfig) -> Command[Li
 
         system_msg = apply_prompt_template("update_memory", state, ** prepare_params)
 
-        msg = system_msg + [HumanMessage(content="判断当前问答对是否需要更新到记忆数据库中。")]
+        msg = system_msg + state["messages"]
 
         response = await llm.ainvoke(msg)
 
-        update_memory = response.content
+        temp = response.content
 
-        if update_memory != "无需更新记忆":
+        if temp:
             # 写入向量数据库
-            data = {
-                "question": user_query,
-                "question_embedding": get_text_embeddings(user_query),
-                "answer": update_memory
-            }
+            rewrite_query = state.get("rewrite_query")
+            data = [{
+                "question": rewrite_query,
+                "question_embedding": get_text_embeddings(rewrite_query),
+                "answer": temp
+            }]
             result = await milvus_service.insert_data("memory", data)
 
             if result:

@@ -40,6 +40,7 @@ class State(TypedDict):
 
     # Agentic RAG specific fields
     user_query: str = ""
+    rewrite_query: str = ""
     history_messages: list = []
     memory_threshold: float = 0.65
     memory_info: List[dict] = []
@@ -49,7 +50,4 @@ class State(TypedDict):
     max_retrieval_iterations: int = 3
     current_iteration: int = 0
     final_answer: str = ""
-
-    quality_score: float = 0.0
-    quality_ok: bool = False
-
+    

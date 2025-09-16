@@ -45,7 +45,7 @@ def create_milvus_collections():
     memory_schema.add_field(
         field_name="answer",
         datatype=DataType.VARCHAR,
-        max_length=200,
+        max_length=2000,
         description="问题的回答文本"
     )
     
