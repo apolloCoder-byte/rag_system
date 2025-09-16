@@ -5,9 +5,6 @@ from pydantic import BaseModel
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
-# from src.prompts.planner_model import Plan
-# from src.rag import Resource
-
 
 class RetrievedInfo(BaseModel):
     """检索到的信息"""
@@ -41,18 +38,6 @@ class State(TypedDict):
     # 使用自定义的消息合并函数
     messages: Annotated[List[AnyMessage], custom_messages_reducer] = []
 
-    # Runtime Variables
-    locale: str = "en-US"
-    research_topic: str = ""
-    observations: list[str] = []
-    # resources: list[Resource] = []
-    plan_iterations: int = 0
-    # current_plan: Plan | str = None
-    final_report: str = ""
-    auto_accepted_plan: bool = False
-    enable_background_investigation: bool = True
-    background_investigation_results: str = None
-    
     # Agentic RAG specific fields
     user_query: str = ""
     history_messages: list = []
