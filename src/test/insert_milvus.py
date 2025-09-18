@@ -1,6 +1,7 @@
 import asyncio
 from src.utils.embedding import get_text_embeddings
 from src.services.milvus import milvus_service
+from pymilvus import MilvusClient
 
 async def test1():
     qa_pairs = [
@@ -45,6 +46,23 @@ async def test2():
         print("\n")
 
 
+async def test3():
+    client = MilvusClient(uri="http://localhost:19530", db_name="finance")
+    collections = client.list_collections()
+    print(f"当前数据库下的集合：{collections}")  # 确认"knowledge"在列表中
+
+    # 2. 查看集合的统计信息（核心：row_count是否>0）
+    if "knowledge" in collections:
+        stats = client.get_collection_stats(collection_name="knowledge")
+        print(f"knowledge集合统计：{stats}")  # 关注"row_count"字段，>0说明有数据
+
+        results = client.query(
+            collection_name="knowledge",
+            limit=10,
+            output_fields=["text", "title"]  # 与代码中metadata字段对应
+        )
+        print(f"查询到的数据：{results}")
+
 if __name__ == "__main__":
-    asyncio.run(test2())
+    asyncio.run(test3())
     

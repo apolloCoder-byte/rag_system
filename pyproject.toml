@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "bcrypt>=4.3.0",
     "dashscope>=1.24.4",
+    "docling>=2.53.0",
     "fastapi>=0.115.12",
     "fastmcp>=2.5.2",
     "langchain>=0.3.25",
@@ -27,7 +28,22 @@ dependencies = [
     "redis>=6.4.0",
     "requests>=2.32.3",
     "sqlmodel>=0.0.24",
-    "streamlit>=1.45.1",
     "trustcall>=0.0.39",
     "uvicorn>=0.34.2",
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "langchain-milvus>=0.2.1",
 ]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true

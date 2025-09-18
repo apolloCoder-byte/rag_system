@@ -156,6 +156,7 @@ async def get_memory_node(state: State, config: RunnableConfig) -> Command[Liter
             memory_info.append(item.get("fields"))
     
     update_dict["memory_info"] = memory_info
+    logger.info(f"过滤出{len(memory_info)}条memory可用")
 
     return Command(
         update=update_dict,
@@ -310,7 +311,7 @@ async def update_memory_node(state: State, config: RunnableConfig) -> Command[Li
         response = await llm.ainvoke(msg)
 
         temp = response.content
-
+        logger.info(f"总结出的记忆：{temp}")
         if temp:
             # 写入向量数据库
             rewrite_query = state.get("rewrite_query")
