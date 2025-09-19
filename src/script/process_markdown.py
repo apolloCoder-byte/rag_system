@@ -92,6 +92,7 @@ class ProcessMarkdown:
         for i in range(0, len(processed_docs), batch_size):
             batch_docs = processed_docs[i:i+batch_size]
             self.vector_db.add_documents(batch_docs)
+            logger.info(f"成功处理第{i+1}/{len(processed_docs)}个")
         
         logger.info("所有的都处理完毕")
 

@@ -5,14 +5,14 @@ build/
 dist/
 wheels/
 *.egg-info
+.idea/
 
 # Virtual environments
 .venv
 
+# env file
 .env
-.env.*
+.env.development
 
-.idea/
-
-# a ppt file
-agentic_rag_workflow.pptx
+# config file
+conf.yaml

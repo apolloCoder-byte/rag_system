@@ -5,15 +5,6 @@ from pydantic import BaseModel
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
 
-
-class RetrievedInfo(BaseModel):
-    """检索到的信息"""
-    content: str
-    source: str
-    relevance_score: float
-    metadata: Dict[str, Any] = {}
-
-
 def custom_messages_reducer(
     existing: Optional[List[AnyMessage]], 
     new: Union[List[AnyMessage], AnyMessage, str]
@@ -46,7 +37,7 @@ class State(TypedDict):
     memory_info: List[dict] = []
     needs_retrieval: bool = False  # update  memory will use this.
     task_description: List[str] = []
-    retrieved_information: List[RetrievedInfo] = []
+    retrieved_information: List[str] = []
     max_retrieval_iterations: int = 3
     current_iteration: int = 0
     final_answer: str = ""

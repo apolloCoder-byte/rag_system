@@ -1,38 +1,38 @@
-personal assistant
----
+# rag系统
 
-## Function description
+## 功能说明
 
-This system has the ability of information retrieval and memory. It can remember the personal information, to-do items and preference settings you input, and can call external tools to retrieve real-time information and generate accurate answers.
+将金融政策等专业文件构建知识库，通过 agentic rag workflow 精准定位关键信息，再根据这些信息回答用户问题。
 
-The "src" folder is the source file.
+## 环境准备
 
-* `interactive_page.py` A front-end page written using streamlit.
-* `main.py` A back-end application written using fastapi, with services provided by agent written using langgraph.
+### 数据库准备
 
-## how to start
-the first step is to prepare your environment.
+本项目使用三个数据库：postgres，redis，milvus。三个数据库都是通过docker启动的容器
+
+其中，milvus的启动参考官网教程：https://milvus.io/docs/zh/install_standalone-windows.md
+
+### 虚拟环境准备
+
+本项目使用uv管理工具。使用通过如下命令下载uv管理工具
 
 ```bash
 pip install uv
+```
+
+然后通过以下命令安装虚拟环境
+```bash
 uv sync --frozen
 ```
-the second step is to prepare the api key of deepseek, zhipu, qwen, and tavily
 
-the third step is to run the mcp server
-```bash
-python src/sub_graph/search_server.py
-```
+### 大模型 api key 准备
 
-the fourth step is to run the back end
-```bash
-python src/main.py
-```
-The fifth step is to run the front-end page
+复制 `conf.example.yaml` 为 `conf.yaml`，复制 `.env.example` 为 `.env`，并配置对应的参数。
+
+## 项目启动
+
+准备工作完成后，启动项目
 
 ```bash
-streamlit run src/interactive_page.py
+python main.py
 ```
-
-## note
-You need to ensure that the mcp server runs on port 8000 and the fastapi runs on port 8001.

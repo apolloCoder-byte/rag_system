@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
+from src.llms.llm import get_basic_llm_config_param
 
 load_dotenv()
 
@@ -34,11 +35,18 @@ def create_llm(llm_type: str):
         streaming=True)
     return model
 
+def create_basic_llm():
+    params = get_basic_llm_config_param("route")
+    model = ChatOpenAI(
+        base_url=params[0],
+        api_key=params[2],
+        model=params[1],
+        temperature=DEFAULT_TEMPERATURE,
+        streaming=True)
+    return model
+
 
 if __name__ == '__main__':
-    model_zhipu = create_llm("zhipu")
-    model_deepseek = create_llm("deepseek")
-    zhipu_respond = model_zhipu.invoke("hello!")
-    deepseek_respond = model_deepseek.invoke("hello!")
-    print("zhipu_respond: ", zhipu_respond.content)
-    print("deepseek_respond: ", deepseek_respond.content)
+    model = create_basic_llm()
+    respond = model.invoke("hello!")
+    print("llm respond: ", respond.content)

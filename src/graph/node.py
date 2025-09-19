@@ -1,37 +1,23 @@
-import json
-import logging
-import os
-from typing import Annotated, Literal
+
+from typing import Literal
 from loguru import logger
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langgraph.types import Command, interrupt
+from langgraph.types import Command
 from pydantic import BaseModel
 
-from src.agents import create_agent
 from src.config.agents import AGENT_LLM_MAP
-from src.config.configuration import Configuration
 from src.llms.llm import get_llm_by_type
-# from src.prompts.planner_model import Plan
-from src.prompts.template import apply_prompt_template
-# from src.tools import (
-#     crawl_tool,
-#     get_retriever_tool,
-#     get_web_search_tool,
-#     python_repl_tool,
-# )
-# from src.tools.search import LoggedTavilySearch
-# from src.utils.json_utils import repair_json_output
 
-# from ..config import SELECTED_SEARCH_ENGINE, SearchEngine
+from src.prompts.template import apply_prompt_template
 from .types import State
 from src.utils.conversation_manager import conversation_manager
 from src.schema.redis import MessageRole
 from src.services.milvus import milvus_service
 from src.utils.embedding import get_text_embeddings
+from src.agents.agents import get_react_agent
+from src.rag.retriever import retriever_tool
 
 
 async def query_node(state: State, config: RunnableConfig) -> Command[Literal["route"]]:
@@ -47,7 +33,8 @@ async def query_node(state: State, config: RunnableConfig) -> Command[Literal["r
         "current_iteration": 0,
         "max_retrieval_iterations": 3,
         "memory_threshold": 0.65,
-        "needs_retrieval": False
+        "needs_retrieval": False,
+        "task_description": []
     }
     
     # 从redis中获取消息记录
@@ -208,12 +195,12 @@ async def supervisor_node(state: State, config: RunnableConfig) -> Command[Liter
         update_dict["needs_retrieval"] = True
 
     # 测试
-    if need_more_info:
-        need_more_info = False
+    # if need_more_info:
+    #     need_more_info = False
 
-    if need_more_info:
-        tasks = task_description.append(task_description_item)
-        update_dict["task_description"] = tasks
+    if need_more_info and task_description_item:
+        task_description.append(task_description_item)
+        update_dict["task_description"] = task_description
         update_dict["current_iteration"] = current_iteration + 1
         return Command(update=update_dict, goto="retrieval_agent")
     else:
@@ -228,30 +215,29 @@ async def retrieval_agent_node(state: State, config: RunnableConfig) -> Command[
     logger.info("检索agent - 使用向量数据库进行检索相关信息")
     
     user_query = state["user_query"]
+    tasks = state.get("task_description", [user_query])
     
-    # 这里实现具体的检索逻辑 使用一个子图实现
-    # 可以是向量检索、知识库检索等
-    retrieved_info = RetrievedInfo(
-        content=f"技术检索结果: {user_query}的相关技术信息",
-        source="technical_knowledge_base",
-        relevance_score=0.85,
-        metadata={"type": "technical", "timestamp": "2024-01-01"}
-    )
-    
-    # 更新检索到的信息
-    current_info = state["retrieved_information"]
-    current_info.append(retrieved_info)
-    
-    # 更新上下文
-    context_parts = [state["current_context"]] if state["current_context"] else []
-    context_parts.append(f"技术检索结果: {retrieved_info.content}")
-    new_context = "\n\n".join(context_parts)
+    logger.info("获取react智能体")
+    agent = get_react_agent([retriever_tool], "research")
+
+    logger.info("开始推理")
+    try:
+        messages = agent.invoke({"messages": [("human", tasks[-1])]})
+    except Exception as e:
+        logger.error(f"推理发生错误：{e}")
+        messages = {"messages": [AIMessage(content="未找到有效内容")]}
+    logger.info("推理结束")
+
+    logger.info("准备更新字段")
+    retrieved_info = messages["messages"][-1].content
+    retrieved_info_history = state.get("retrieved_information", [])
+    retrieved_info_history.append(retrieved_info)
+    update_dict = {
+        "retrieved_information": retrieved_info_history
+    }
     
     return Command(
-        update={
-            "retrieved_information": current_info,
-            "current_context": new_context
-        },
+        update=update_dict,
         goto="supervisor"
     )
 

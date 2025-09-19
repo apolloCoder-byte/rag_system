@@ -7,14 +7,9 @@
 # - A restart is required every time you change the `config.yaml` file.
 
 BASIC_MODEL:
-  # qwen-plus
-  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
-  model: qwen-plus
-  api_key: ***REMOVED***
-  # deepseek-chat
-  # base_url: https://api.deepseek.com/v1
-  # model: deepseek-chat
-  # api_key: ***REMOVED***
+  base_url: llm base url
+  model: llm name
+  api_key: llm api key
   
   # max_retries: 3 # Maximum number of retries for LLM calls
   # verify_ssl: false  # Uncomment this line to disable SSL certificate verification for self-signed certificates

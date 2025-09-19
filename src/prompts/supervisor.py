@@ -42,7 +42,7 @@ SUPERVISOR_PROMPT = """
  - 若信息不足需要检索，则 needs_more_info 字段设置为 True, task_description_item 字段设置为具体的检索任务描述
 
 3. 注意：
- - task_description需是具体、明确的检索需求，不重复已发布任务
+ - task_description需是具体、明确的检索需求，不重复已发布任务，且任务的字数应该严格限制为一句话（不超过50个字），**字数要求应该严格遵守限制，否则系统会出现异常**。
  - 必须严格返回JSON格式，不包含任何额外文本
 
 """

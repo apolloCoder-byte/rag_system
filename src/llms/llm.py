@@ -154,6 +154,17 @@ def get_configured_llm_models() -> dict[str, list[str]]:
         print(f"Warning: Failed to load LLM configuration: {e}")
         return {}
 
+def get_basic_llm_config_param(llm_type: LLMType):
+    if llm_type in _llm_cache:
+        return _llm_cache[llm_type]
+    conf = load_yaml_config(_get_config_file_path())
+    base_url = conf.get("BASIC_MODEL").get("base_url")
+    model = conf.get("BASIC_MODEL").get("model")
+    api_key = conf.get("BASIC_MODEL").get("api_key")
+    return base_url, model, api_key
+
+
+
 
 # In the future, we will use reasoning_llm and vl_llm for different purposes
 # reasoning_llm = get_llm_by_type("reasoning")
