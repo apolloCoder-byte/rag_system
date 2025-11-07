@@ -80,7 +80,7 @@ async def route_node(state: State, config: RunnableConfig) -> Command[Literal["g
     update_dict["messages"] = history_messages
     msg = system_msg + history_messages
     response = await llm.ainvoke(msg)
-    print(response.content.strip().lower())
+    # print(response.content.strip().lower())
     needs_retrieval = response.content.strip().lower() == "true"
 
     # 测试，直接生成

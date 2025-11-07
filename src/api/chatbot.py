@@ -11,7 +11,7 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import StreamingResponse
-from langchain_core.messages import HumanMessage, AIMessageChunk, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessageChunk, AIMessage
 from src.api.auth import get_current_user
 from src.graph.builder import build_agentic_rag_graph
 from src.utils.conversation_manager import conversation_manager
@@ -61,31 +61,28 @@ async def astream_workflow_generator(
         }
         
         # 流式调用 graph
+        answer = []
         async for chunk in graph.astream(input_state, config, stream_mode="messages"):
-            # print(chunk)
-            # print("\n")
-            message_obj, _ = chunk
+            message_obj, metadata = chunk
+            langgraph_node = metadata.get("langgraph_node")
+            if langgraph_node == "deal_with_results" and message_obj.content:
+                content = message_obj.content
+                answer.append(content)
+                yield f"data: {content}\n\n"
 
-            if (
-                isinstance(message_obj, AIMessageChunk)
-                and message_obj.content
-                and isinstance(message_obj.content, str)
-            ):
-                yield f"data: {message_obj.content}\n\n"
-                await asyncio.sleep(0.01)
-            
-            # if isinstance(message_obj, AIMessage) and not isinstance(message_obj, AIMessageChunk):
-            #     # conversation_manager.add_message(
-            #     #     session_id=thread_id,
-            #     #     user_id=user_id,
-            #     #     message_role=MessageRole.ASSISTANT,
-            #     #     message=message_obj.content
-            #     # )
-            #     print(message_obj.content)
-        
         # 发送完成信号
         final_data = {"content": "", "done": True}
         yield f"data: {json.dumps(final_data, ensure_ascii=False)}\n\n"
+        
+        # 保存到数据库中
+        full_answer = "".join(answer)
+        logger.info(f"Stream completed. Saving full answer to DB for thread {thread_id}")
+        conversation_manager.add_message(
+            session_id=thread_id,
+            user_id=user_id,
+            message_role=MessageRole.ASSISTANT,
+            message=full_answer
+        )
         
     except Exception as e:
         logger.error(f"Error in stream workflow: {e}", exc_info=True)
