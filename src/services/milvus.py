@@ -56,6 +56,7 @@ class MilvusConnector:
                 raise ValueError(f"集合 {collection_name} 不存在")
                 
             # 执行插入
+            logger.info(f"插入数据: {data}")
             result = self.client.insert(
                 collection_name=collection_name,
                 data=data
@@ -74,6 +75,7 @@ class MilvusConnector:
             raise
         except Exception as e:
             logger.error(f"插入数据到 {collection_name} 失败: {str(e)}")
+            logger.error(f"插入数据: {data}")
             return False
 
     async def search_data_by_single_vector(
