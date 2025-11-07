@@ -143,7 +143,6 @@ async def health_check(request: Request) -> Dict[str, Any]:
 
     # Check database connectivity
     db_healthy = await database_service.health_check()
-    print("lq")
     response = {
         "status": "healthy" if db_healthy else "degraded",
         "version": settings.VERSION,
