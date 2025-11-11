@@ -1,5 +1,7 @@
 """This file contains the main application entry point."""
-
+import asyncio
+from asyncio import WindowsSelectorEventLoopPolicy
+asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
