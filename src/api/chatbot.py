@@ -13,7 +13,7 @@ from fastapi import (
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessageChunk, AIMessage
 from src.api.auth import get_current_user
-from src.graph.builder import build_agentic_rag_graph
+from src.graph.builder import LangGraphAgent
 from src.utils.conversation_manager import conversation_manager
 from src.schema.redis import MessageRole
 from loguru import logger
@@ -25,8 +25,7 @@ from src.schema.chat import (
 from src.schema.user import User
 
 router = APIRouter()
-
-graph = build_agentic_rag_graph()
+agent = LangGraphAgent()
 
 async def astream_workflow_generator(
     message: str,
@@ -62,6 +61,7 @@ async def astream_workflow_generator(
         
         # 流式调用 graph
         answer = []
+        graph = await agent.create_graph()
         async for chunk in graph.astream(input_state, config, stream_mode="messages"):
             message_obj, metadata = chunk
             langgraph_node = metadata.get("langgraph_node")
@@ -180,6 +180,7 @@ async def chat(
         }
         
         # 调用 graph 工作流
+        graph = await agent.create_graph()
         result = await graph.ainvoke(input_state, config)
         
         # 提取响应内容

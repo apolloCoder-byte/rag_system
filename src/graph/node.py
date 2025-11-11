@@ -1,4 +1,4 @@
-
+import asyncio
 from typing import Literal
 from loguru import logger
 
@@ -222,7 +222,11 @@ async def retrieval_agent_node(state: State, config: RunnableConfig) -> Command[
 
     logger.info("开始推理")
     try:
-        messages = agent.invoke({"messages": [("human", tasks[-1])]})
+        # messages = agent.invoke({"messages": [("human", tasks[-1])]})
+        messages = await asyncio.wait_for(
+            asyncio.to_thread(agent.invoke, {"messages": [("human", tasks[-1])]}),
+            timeout=90
+        )
     except Exception as e:
         logger.error(f"推理发生错误：{e}")
         messages = {"messages": [AIMessage(content="未找到有效内容")]}
