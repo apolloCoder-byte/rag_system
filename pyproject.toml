@@ -30,22 +30,7 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "trustcall>=0.0.39",
     "uvicorn>=0.34.2",
-    "torch>=2.5.1",
-    "torchvision>=0.20.1",
     "langchain-milvus>=0.2.1",
     "langgraph-checkpoint-postgres>=3.0.1",
     "nest-asyncio>=1.6.0",
 ]
-
-[tool.uv.sources]
-torch = [
-  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
-]
-torchvision = [
-  { index = "pytorch-cu121", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
-]
-
-[[tool.uv.index]]
-name = "pytorch-cu121"
-url = "https://download.pytorch.org/whl/cu121"
-explicit = true

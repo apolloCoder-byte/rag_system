@@ -17,8 +17,8 @@ class milvus_retriever:
             embedding_function=embedding_fn,
             collection_name="knowledge",
             connection_args={
-                "uri": "http://localhost:19530",
-                "db_name": "finance"
+                "uri": f"http://{settings.MILVUS_HOST}:{settings.MILVUS_PORT}",
+                "db_name": f"{settings.MILVUS_DATABASE}"
             }
         )
 

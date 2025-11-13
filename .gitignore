@@ -13,6 +13,7 @@ wheels/
 # env file
 .env
 .env.development
+.env.production.*
 
 # config file
 conf.yaml

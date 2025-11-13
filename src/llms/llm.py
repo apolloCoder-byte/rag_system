@@ -14,6 +14,7 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from src.config import load_yaml_config
 from src.config.agents import LLMType
 from src.llms.providers.dashscope import ChatDashscope
+from src.config.setting import settings
 
 
 # Cache for LLM instances
@@ -112,8 +113,16 @@ def get_llm_by_type(llm_type: LLMType) -> BaseChatModel:
     if llm_type in _llm_cache:
         return _llm_cache[llm_type]
 
-    conf = load_yaml_config(_get_config_file_path())
-    llm = _create_llm_use_conf(llm_type, conf)
+    # conf = load_yaml_config(_get_config_file_path())
+    # llm = _create_llm_use_conf(llm_type, conf)
+
+    # 写死
+    llm = ChatOpenAI(
+        base_url=settings.CHAT_BASE_URL,
+        api_key=settings.CHAT_API_KEY,
+        model=settings.CHAT_MODEL,
+        temperature=0.2
+    )
     _llm_cache[llm_type] = llm
     return llm
 

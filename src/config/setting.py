@@ -180,6 +180,11 @@ class Settings:
         self.EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
         self.EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY")
 
+        # chat model 配置
+        self.CHAT_MODEL: str = os.getenv("CHAT_MODEL", "")
+        self.CHAT_API_KEY: str = os.getenv("CHAT_API_KEY", "")
+        self.CHAT_BASE_URL: str = os.getenv("CHAT_BASE_URL", "")
+
         # Rate Limiting Configuration
         self.RATE_LIMIT_DEFAULT = parse_list_from_env("RATE_LIMIT_DEFAULT", ["200 per day", "50 per hour"])
 

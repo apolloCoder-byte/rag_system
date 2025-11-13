@@ -1,21 +1,16 @@
 from pymilvus import MilvusClient, DataType
-from datetime import datetime
-from src.config.setting import settings
+from loguru import logger
 
-def create_milvus_collections():
-    # 初始化Milvus客户端
-    client = MilvusClient(
-        uri=f"http://{settings.MILVUS_HOST}:{settings.MILVUS_PORT}",
-        db_name=settings.MILVUS_DATABASE
-        )
-    
+def create_memory_collection(client: MilvusClient):
     # --------------------------
     # 1. 创建memory（存储QA对）
     # --------------------------
     memory_collection_name = "memory"
     
     if client.has_collection(collection_name=memory_collection_name):
-        client.drop_collection(collection_name=memory_collection_name)
+        # client.drop_collection(collection_name=memory_collection_name)
+        logger.info("已经创建")
+        return
     
     # 定义memory_collection的schema
     memory_schema = client.create_schema(
@@ -65,8 +60,8 @@ def create_milvus_collections():
         schema=memory_schema,
         index_params=memory_index_params
     )
-    print(f"已创建集合: {memory_collection_name}")
+    logger.info(f"已创建集合: {memory_collection_name}")
 
-if __name__ == "__main__":
-    # 执行创建集合的函数
-    create_milvus_collections()
+collections = {
+    "memory": create_memory_collection
+}

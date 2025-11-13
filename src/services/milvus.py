@@ -2,6 +2,7 @@ from loguru import logger
 from pymilvus import MilvusClient, exceptions
 
 from src.config.setting import settings
+from src.utils.milvus_collection import collections
 
 class MilvusConnector:
     """Milvus 数据库连接管理类"""
@@ -30,6 +31,11 @@ class MilvusConnector:
             logger.info(f"连接过程发生未知错误: {str(e)}")
             self.client = None
             raise
+
+        # 确保所有的collection都已经创建
+        for collection_name, method in collections.items():
+            logger.info(f"collection name: {collection_name}")
+            method(self.client)
     
     async def insert_data(self, collection_name: str, data: list[dict]) -> bool:
         """
