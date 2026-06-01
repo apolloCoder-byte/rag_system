@@ -65,7 +65,7 @@ async def astream_workflow_generator(
         async for chunk in graph.astream(input_state, config, stream_mode="messages"):
             message_obj, metadata = chunk
             langgraph_node = metadata.get("langgraph_node")
-            if langgraph_node == "deal_with_results" and message_obj.content:
+            if langgraph_node in ("deal_with_results", "answer") and message_obj.content:
                 content = message_obj.content
                 answer.append(content)
                 yield f"data: {content}\n\n"

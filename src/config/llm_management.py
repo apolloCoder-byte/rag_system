@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
-from src.llms.llm import get_basic_llm_config_param
+from src.config.setting import settings
 
 load_dotenv()
 
@@ -36,11 +36,10 @@ def create_llm(llm_type: str):
     return model
 
 def create_basic_llm():
-    params = get_basic_llm_config_param("route")
     model = ChatOpenAI(
-        base_url=params[0],
-        api_key=params[2],
-        model=params[1],
+        base_url=settings.CHAT_BASE_URL,
+        api_key=settings.CHAT_API_KEY,
+        model=settings.CHAT_MODEL,
         temperature=DEFAULT_TEMPERATURE,
         streaming=True)
     return model

@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
-from pathlib import Path
-from typing import Any, Dict, get_args
+from typing import Any, Dict
 
 import httpx
 from loguru import logger
@@ -11,7 +10,6 @@ from langchain_core.language_models import BaseChatModel
 from langchain_deepseek import ChatDeepSeek
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-from src.config import load_yaml_config
 from src.config.agents import LLMType
 from src.llms.providers.dashscope import ChatDashscope
 from src.config.setting import settings
@@ -21,11 +19,6 @@ from src.config.setting import settings
 _llm_cache: dict[LLMType, BaseChatModel] = {}
 
 
-def _get_config_file_path() -> str:
-    """Get the path to the configuration file."""
-    string = str((Path(__file__).parent.parent.parent / "conf.yaml").resolve())
-    # logger.info(string)
-    return string
 
 
 def _get_llm_type_config_keys() -> dict[str, str]:
@@ -113,10 +106,6 @@ def get_llm_by_type(llm_type: LLMType) -> BaseChatModel:
     if llm_type in _llm_cache:
         return _llm_cache[llm_type]
 
-    # conf = load_yaml_config(_get_config_file_path())
-    # llm = _create_llm_use_conf(llm_type, conf)
-
-    # 写死
     llm = ChatOpenAI(
         base_url=settings.CHAT_BASE_URL,
         api_key=settings.CHAT_API_KEY,
@@ -126,55 +115,3 @@ def get_llm_by_type(llm_type: LLMType) -> BaseChatModel:
     _llm_cache[llm_type] = llm
     return llm
 
-
-def get_configured_llm_models() -> dict[str, list[str]]:
-    """
-    Get all configured LLM models grouped by type.
-
-    Returns:
-        Dictionary mapping LLM type to list of configured model names.
-    """
-    try:
-        conf = load_yaml_config(_get_config_file_path())
-        llm_type_config_keys = _get_llm_type_config_keys()
-
-        configured_models: dict[str, list[str]] = {}
-
-        for llm_type in get_args(LLMType):
-            # Get configuration from YAML file
-            config_key = llm_type_config_keys.get(llm_type, "")
-            yaml_conf = conf.get(config_key, {}) if config_key else {}
-
-            # Get configuration from environment variables
-            env_conf = _get_env_llm_conf(llm_type)
-
-            # Merge configurations, with environment variables taking precedence
-            merged_conf = {**yaml_conf, **env_conf}
-
-            # Check if model is configured
-            model_name = merged_conf.get("model")
-            if model_name:
-                configured_models.setdefault(llm_type, []).append(model_name)
-
-        return configured_models
-
-    except Exception as e:
-        # Log error and return empty dict to avoid breaking the application
-        print(f"Warning: Failed to load LLM configuration: {e}")
-        return {}
-
-def get_basic_llm_config_param(llm_type: LLMType):
-    if llm_type in _llm_cache:
-        return _llm_cache[llm_type]
-    conf = load_yaml_config(_get_config_file_path())
-    base_url = conf.get("BASIC_MODEL").get("base_url")
-    model = conf.get("BASIC_MODEL").get("model")
-    api_key = conf.get("BASIC_MODEL").get("api_key")
-    return base_url, model, api_key
-
-
-
-
-# In the future, we will use reasoning_llm and vl_llm for different purposes
-# reasoning_llm = get_llm_by_type("reasoning")
-# vl_llm = get_llm_by_type("vision")
